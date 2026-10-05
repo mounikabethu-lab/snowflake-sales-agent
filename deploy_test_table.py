@@ -38,6 +38,7 @@ def deploy_test_table():
         # Create test table
         print("Creating TEST_DEPLOYMENT table...")
         create_table_sql = """
+        USE SCHEMA PUBLIC;
         CREATE OR REPLACE TABLE TEST_DEPLOYMENT (
             test_id INT,
             test_name VARCHAR,
