@@ -1,0 +1,91 @@
+{
+    "relationships": [
+      {
+        "from_table": "ORDERS",
+        "from_column": "customer_id",
+        "to_table": "CUSTOMERS",
+        "to_column": "customer_id",
+        "relationship_type": "Many-to-One",
+        "description": "Each order belongs to one customer"
+      },
+      {
+        "from_table": "ORDERS",
+        "from_column": "rep_id",
+        "to_table": "SALES_REPS",
+        "to_column": "rep_id",
+        "relationship_type": "Many-to-One",
+        "description": "Each order is handled by one sales rep"
+      },
+      {
+        "from_table": "ORDER_ITEMS",
+        "from_column": "order_id",
+        "to_table": "ORDERS",
+        "to_column": "order_id",
+        "relationship_type": "Many-to-One",
+        "description": "Each line item belongs to one order"
+      },
+      {
+        "from_table": "ORDER_ITEMS",
+        "from_column": "product_id",
+        "to_table": "PRODUCTS",
+        "to_column": "product_id",
+        "relationship_type": "Many-to-One",
+        "description": "Each line item references a product"
+      },
+      {
+        "from_table": "CUSTOMER_SEGMENTS",
+        "from_column": "customer_id",
+        "to_table": "CUSTOMERS",
+        "to_column": "customer_id",
+        "relationship_type": "One-to-One",
+        "description": "Customer segmentation data"
+      },
+      {
+        "from_table": "CUSTOMER_LIFETIME_VALUE",
+        "from_column": "customer_id",
+        "to_table": "CUSTOMERS",
+        "to_column": "customer_id",
+        "relationship_type": "One-to-One",
+        "description": "Customer financial metrics"
+      },
+      {
+        "from_table": "SALES_PERFORMANCE",
+        "from_column": "rep_id",
+        "to_table": "SALES_REPS",
+        "to_column": "rep_id",
+        "relationship_type": "Many-to-One",
+        "description": "Monthly performance by rep"
+      },
+      {
+        "from_table": "PRODUCT_DEMAND_FREQUENCY",
+        "from_column": "product_id",
+        "to_table": "PRODUCTS",
+        "to_column": "product_id",
+        "relationship_type": "One-to-One",
+        "description": "Product demand patterns"
+      },
+      {
+        "from_table": "MONTHLY_SALES_TRENDS",
+        "from_column": "product_id",
+        "to_table": "PRODUCTS",
+        "to_column": "product_id",
+        "relationship_type": "Many-to-One",
+        "description": "Monthly sales by product"
+      },
+      {
+        "from_table": "DEMAND_FORECAST",
+        "from_column": "product_id",
+        "to_table": "PRODUCTS",
+        "to_column": "product_id",
+        "relationship_type": "Many-to-One",
+        "description": "Future demand prediction"
+      }
+    ],
+    "join_hints": {
+      "sales_analysis": "ORDERS → CUSTOMERS → SALES_REPS",
+      "revenue_by_product": "ORDERS → ORDER_ITEMS → PRODUCTS",
+      "customer_health": "CUSTOMERS → CUSTOMER_LIFETIME_VALUE → CUSTOMER_SEGMENTS",
+      "rep_performance": "SALES_REPS → SALES_PERFORMANCE",
+      "inventory_planning": "PRODUCTS → PRODUCT_DEMAND_FREQUENCY → DEMAND_FORECAST"
+    }
+  }

@@ -1,0 +1,424 @@
+{
+    "tables": [
+      {
+        "table_name": "CUSTOMERS",
+        "table_type": "Dimension",
+        "description": "Master customer data including company information, subscription tier, and contract values",
+        "columns": [
+          {
+            "column_name": "customer_id",
+            "data_type": "INT",
+            "description": "Unique customer identifier",
+            "is_key": true,
+            "key_type": "PRIMARY"
+          },
+          {
+            "column_name": "customer_name",
+            "data_type": "VARCHAR",
+            "description": "Company name of the customer",
+            "business_context": "Use for reporting and communication"
+          },
+          {
+            "column_name": "industry",
+            "data_type": "VARCHAR",
+            "description": "Industry vertical (Technology, Finance, Healthcare, etc)",
+            "business_context": "Segment customers by industry for targeted strategies"
+          },
+          {
+            "column_name": "company_size",
+            "data_type": "VARCHAR",
+            "description": "Company size category (Enterprise, Mid-Market, Small, Startup)",
+            "business_context": "Determines sales strategy and support level"
+          },
+          {
+            "column_name": "country",
+            "data_type": "VARCHAR",
+            "description": "Country where customer is located",
+            "business_context": "Regional compliance and market analysis"
+          },
+          {
+            "column_name": "state",
+            "data_type": "VARCHAR",
+            "description": "State/Province of customer location",
+            "business_context": "Territory management"
+          },
+          {
+            "column_name": "subscription_tier",
+            "data_type": "VARCHAR",
+            "description": "Subscription level (Enterprise, Professional, Standard)",
+            "business_context": "Determines pricing and feature access"
+          },
+          {
+            "column_name": "contract_value",
+            "data_type": "DECIMAL",
+            "description": "Current contract value in USD",
+            "business_context": "Key metric for revenue recognition"
+          },
+          {
+            "column_name": "annual_contract_value",
+            "data_type": "DECIMAL",
+            "description": "Annualized contract value in USD",
+            "business_context": "ARR metric for forecasting"
+          }
+        ]
+      },
+      {
+        "table_name": "PRODUCTS",
+        "table_type": "Dimension",
+        "description": "Product catalog with pricing, launch dates, and lifecycle status",
+        "columns": [
+          {
+            "column_name": "product_id",
+            "data_type": "INT",
+            "description": "Unique product identifier",
+            "is_key": true,
+            "key_type": "PRIMARY"
+          },
+          {
+            "column_name": "product_name",
+            "data_type": "VARCHAR",
+            "description": "Product name",
+            "business_context": "Used in all reports and customer communications"
+          },
+          {
+            "column_name": "product_category",
+            "data_type": "VARCHAR",
+            "description": "Product category (Software, SaaS)",
+            "business_context": "Segment products by delivery model"
+          },
+          {
+            "column_name": "product_line",
+            "data_type": "VARCHAR",
+            "description": "Product line (Enterprise, Analytics, Cloud, etc)",
+            "business_context": "Strategic grouping for portfolio management"
+          },
+          {
+            "column_name": "unit_price",
+            "data_type": "DECIMAL",
+            "description": "Current unit price in USD",
+            "business_context": "Used for order calculations"
+          },
+          {
+            "column_name": "list_price",
+            "data_type": "DECIMAL",
+            "description": "List/published price",
+            "business_context": "Reference for discount calculations"
+          },
+          {
+            "column_name": "cost_price",
+            "data_type": "DECIMAL",
+            "description": "Cost to deliver product",
+            "business_context": "Calculate gross margin"
+          },
+          {
+            "column_name": "status",
+            "data_type": "VARCHAR",
+            "description": "Product status (Active, End-of-Life)",
+            "business_context": "Identify sunset products"
+          }
+        ]
+      },
+      {
+        "table_name": "SALES_REPS",
+        "table_type": "Dimension",
+        "description": "Sales team member information, territories, and compensation",
+        "columns": [
+          {
+            "column_name": "rep_id",
+            "data_type": "INT",
+            "description": "Unique sales rep identifier",
+            "is_key": true,
+            "key_type": "PRIMARY"
+          },
+          {
+            "column_name": "rep_name",
+            "data_type": "VARCHAR",
+            "description": "Sales representative full name",
+            "business_context": "Identify reps in reports"
+          },
+          {
+            "column_name": "region",
+            "data_type": "VARCHAR",
+            "description": "Sales region (West, East, South, etc)",
+            "business_context": "Regional performance analysis"
+          },
+          {
+            "column_name": "quota",
+            "data_type": "DECIMAL",
+            "description": "Annual sales quota in USD",
+            "business_context": "Compare actual vs quota for performance"
+          },
+          {
+            "column_name": "commission_percent",
+            "data_type": "DECIMAL",
+            "description": "Commission percentage on sales",
+            "business_context": "Calculate compensation"
+          }
+        ]
+      },
+      {
+        "table_name": "ORDERS",
+        "table_type": "Fact",
+        "description": "Sales transactions - core revenue fact table",
+        "columns": [
+          {
+            "column_name": "order_id",
+            "data_type": "INT",
+            "description": "Unique order identifier",
+            "is_key": true,
+            "key_type": "PRIMARY"
+          },
+          {
+            "column_name": "customer_id",
+            "data_type": "INT",
+            "description": "Reference to CUSTOMERS table",
+            "is_key": true,
+            "key_type": "FOREIGN",
+            "references_table": "CUSTOMERS"
+          },
+          {
+            "column_name": "rep_id",
+            "data_type": "INT",
+            "description": "Reference to SALES_REPS table",
+            "is_key": true,
+            "key_type": "FOREIGN",
+            "references_table": "SALES_REPS"
+          },
+          {
+            "column_name": "order_date",
+            "data_type": "DATE",
+            "description": "Date order was placed",
+            "business_context": "Time dimension for analysis"
+          },
+          {
+            "column_name": "deal_value",
+            "data_type": "DECIMAL",
+            "description": "Original deal value before discounts",
+            "business_context": "Gross deal value metric"
+          },
+          {
+            "column_name": "discount_percent",
+            "data_type": "DECIMAL",
+            "description": "Discount percentage applied",
+            "business_context": "Discount impact analysis"
+          },
+          {
+            "column_name": "final_value",
+            "data_type": "DECIMAL",
+            "description": "Final value after discounts",
+            "business_context": "Actual revenue recorded"
+          },
+          {
+            "column_name": "order_status",
+            "data_type": "VARCHAR",
+            "description": "Order status (Closed Won, Closed Lost, In Progress)",
+            "business_context": "Pipeline stage tracking"
+          }
+        ]
+      },
+      {
+        "table_name": "PRODUCT_DEMAND_FREQUENCY",
+        "table_type": "Analytics",
+        "description": "Product demand patterns and growth trends",
+        "columns": [
+          {
+            "column_name": "product_id",
+            "data_type": "INT",
+            "description": "Reference to PRODUCTS",
+            "references_table": "PRODUCTS"
+          },
+          {
+            "column_name": "purchase_frequency",
+            "data_type": "VARCHAR",
+            "description": "How often purchased (Weekly, Monthly, Quarterly, Annual)",
+            "business_context": "Manufacturing and inventory planning"
+          },
+          {
+            "column_name": "growth_trend_percent",
+            "data_type": "DECIMAL",
+            "description": "Year-over-year growth percentage",
+            "business_context": "Identify high-growth products to promote"
+          },
+          {
+            "column_name": "peak_season",
+            "data_type": "VARCHAR",
+            "description": "When product sells most (Q1, Q2, Q3, Q4)",
+            "business_context": "Seasonal planning"
+          },
+          {
+            "column_name": "inventory_recommendation",
+            "data_type": "INT",
+            "description": "Recommended inventory level",
+            "business_context": "Stock management"
+          }
+        ]
+      },
+      {
+        "table_name": "CUSTOMER_LIFETIME_VALUE",
+        "table_type": "Analytics",
+        "description": "Customer value metrics and churn risk analysis",
+        "columns": [
+          {
+            "column_name": "customer_id",
+            "data_type": "INT",
+            "description": "Reference to CUSTOMERS",
+            "references_table": "CUSTOMERS"
+          },
+          {
+            "column_name": "total_revenue",
+            "data_type": "DECIMAL",
+            "description": "Total historical revenue from customer",
+            "business_context": "Customer value metric"
+          },
+          {
+            "column_name": "churn_risk_percent",
+            "data_type": "DECIMAL",
+            "description": "Probability of customer churn (0-100)",
+            "business_context": "Alert threshold: >25 = high risk, needs intervention"
+          },
+          {
+            "column_name": "renewal_likelihood_percent",
+            "data_type": "DECIMAL",
+            "description": "Probability of renewal (0-100)",
+            "business_context": "Renewal forecasting"
+          },
+          {
+            "column_name": "predicted_ltv",
+            "data_type": "DECIMAL",
+            "description": "Predicted lifetime value",
+            "business_context": "Strategic customer segmentation"
+          }
+        ]
+      },
+      {
+        "table_name": "SALES_PERFORMANCE",
+        "table_type": "Analytics",
+        "description": "Monthly sales performance metrics by rep",
+        "columns": [
+          {
+            "column_name": "rep_id",
+            "data_type": "INT",
+            "description": "Reference to SALES_REPS",
+            "references_table": "SALES_REPS"
+          },
+          {
+            "column_name": "performance_month",
+            "data_type": "VARCHAR",
+            "description": "Month in YYYY-MM format",
+            "business_context": "Time period for metrics"
+          },
+          {
+            "column_name": "quota",
+            "data_type": "DECIMAL",
+            "description": "Monthly quota target",
+            "business_context": "Expected performance"
+          },
+          {
+            "column_name": "actual_revenue",
+            "data_type": "DECIMAL",
+            "description": "Actual revenue achieved",
+            "business_context": "Actual performance"
+          },
+          {
+            "column_name": "quota_attainment_percent",
+            "data_type": "DECIMAL",
+            "description": "% of quota achieved",
+            "business_context": "Alert: <85% = underperforming, >110% = exceeding"
+          },
+          {
+            "column_name": "deals_won",
+            "data_type": "INT",
+            "description": "Number of deals closed won",
+            "business_context": "Deal velocity metric"
+          },
+          {
+            "column_name": "pipeline_value",
+            "data_type": "DECIMAL",
+            "description": "Current deal pipeline value",
+            "business_context": "Future revenue forecast"
+          }
+        ]
+      },
+      {
+        "table_name": "AGENT_QUERY_AUDIT",
+        "table_type": "System",
+        "description": "Log of all agent queries for audit and optimization",
+        "columns": [
+          {
+            "column_name": "query_id",
+            "data_type": "INT",
+            "description": "Unique query audit record",
+            "is_key": true,
+            "key_type": "PRIMARY"
+          },
+          {
+            "column_name": "agent_action",
+            "data_type": "VARCHAR",
+            "description": "Agent action that triggered query (e.g., DAILY_SALES_SUMMARY)",
+            "business_context": "Track which agent actions use the most resources"
+          },
+          {
+            "column_name": "execution_time_ms",
+            "data_type": "INT",
+            "description": "Query execution time in milliseconds",
+            "business_context": "Performance optimization: >5000ms = slow query alert"
+          },
+          {
+            "column_name": "rows_returned",
+            "data_type": "INT",
+            "description": "Number of rows returned",
+            "business_context": "Data volume metrics"
+          },
+          {
+            "column_name": "execution_status",
+            "data_type": "VARCHAR",
+            "description": "Query status (SUCCESS, FAILED)",
+            "business_context": "Reliability monitoring"
+          }
+        ]
+      },
+      {
+        "table_name": "DEMAND_FORECAST",
+        "table_type": "Analytics",
+        "description": "Demand forecast for manufacturing and inventory planning",
+        "columns": [
+          {
+            "column_name": "product_id",
+            "data_type": "INT",
+            "description": "Reference to PRODUCTS",
+            "references_table": "PRODUCTS"
+          },
+          {
+            "column_name": "forecast_month",
+            "data_type": "VARCHAR",
+            "description": "Forecast month in YYYY-MM format",
+            "business_context": "Planning horizon"
+          },
+          {
+            "column_name": "forecasted_units",
+            "data_type": "INT",
+            "description": "Predicted units to sell",
+            "business_context": "Manufacturing schedule input"
+          },
+          {
+            "column_name": "manufacturing_deadline",
+            "data_type": "DATE",
+            "description": "Date manufacturing must complete",
+            "business_context": "Alert: if today > deadline and not manufactured = urgent"
+          },
+          {
+            "column_name": "risk_level",
+            "data_type": "VARCHAR",
+            "description": "Risk assessment (Low, Medium, High)",
+            "business_context": "High risk = needs management attention"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "total_tables": 16,
+      "data_warehouse": "SALES_DATA",
+      "schema": "PUBLIC",
+      "last_updated": "2024-01-28"
+    }
+  }

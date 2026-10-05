@@ -1,0 +1,127 @@
+{
+    "business_rules": {
+      "churn_risk_thresholds": {
+        "high_risk": {
+          "threshold": ">25%",
+          "action": "Alert sales team for intervention"
+        },
+        "medium_risk": {
+          "threshold": "15-25%",
+          "action": "Monitor closely"
+        },
+        "low_risk": {
+          "threshold": "<15%",
+          "action": "Continue normal engagement"
+        }
+      },
+      "sales_rep_performance": {
+        "underperforming": {
+          "threshold": "<85% quota attainment",
+          "action": "Manager review and coaching"
+        },
+        "on_track": {
+          "threshold": "85-110% quota attainment",
+          "action": "Normal operations"
+        },
+        "exceeding": {
+          "threshold": ">110% quota attainment",
+          "action": "Recognition and best practice sharing"
+        }
+      },
+      "inventory_alerts": {
+        "critical": {
+          "condition": "quantity_available < safety_stock",
+          "action": "Immediate reorder required"
+        },
+        "warning": {
+          "condition": "quantity_available < (safety_stock * 1.5)",
+          "action": "Prepare reorder"
+        }
+      },
+      "product_growth": {
+        "high_growth": {
+          "threshold": ">15% YoY growth",
+          "action": "Increase marketing, expand manufacturing"
+        },
+        "moderate_growth": {
+          "threshold": "5-15% YoY growth",
+          "action": "Maintain current strategy"
+        },
+        "declining": {
+          "threshold": "<5% YoY growth",
+          "action": "Review strategy, consider sunset"
+        }
+      }
+    },
+    "query_patterns": {
+      "daily_sales_summary": {
+        "tables": ["ORDERS", "SALES_REPS"],
+        "metrics": ["total_revenue", "deals_closed", "avg_deal_size"],
+        "filter": "WHERE DATE(order_date) = CURRENT_DATE()",
+        "use_case": "Daily morning briefing for sales team"
+      },
+      "churn_alert": {
+        "tables": ["CUSTOMER_LIFETIME_VALUE", "CUSTOMERS"],
+        "metrics": ["churn_risk_percent", "total_revenue", "days_since_order"],
+        "filter": "WHERE churn_risk_percent > 25",
+        "use_case": "Identify at-risk accounts needing intervention"
+      },
+      "manufacturing_schedule": {
+        "tables": ["DEMAND_FORECAST", "PRODUCT_INVENTORY"],
+        "metrics": ["forecasted_units", "lead_time_days", "units_to_manufacture"],
+        "filter": "WHERE manufacturing_deadline = NEXT_MONTH",
+        "use_case": "Monthly manufacturing planning"
+      },
+      "rep_performance": {
+        "tables": ["SALES_PERFORMANCE", "SALES_REPS"],
+        "metrics": ["quota_attainment_percent", "deals_won", "pipeline_value"],
+        "filter": "WHERE performance_month = CURRENT_MONTH",
+        "use_case": "Monthly rep scorecard"
+      }
+    },
+    "kpis": {
+      "revenue_metrics": [
+        "total_revenue",
+        "arv (annual_contract_value)",
+        "average_deal_size",
+        "gross_margin_percent"
+      ],
+      "customer_metrics": [
+        "customer_lifetime_value",
+        "churn_risk_percent",
+        "renewal_likelihood_percent",
+        "days_as_customer"
+      ],
+      "sales_metrics": [
+        "quota_attainment_percent",
+        "deals_won",
+        "deals_lost",
+        "pipeline_value",
+        "sales_cycle_days"
+      ],
+      "product_metrics": [
+        "growth_trend_percent",
+        "total_units_sold",
+        "purchase_frequency",
+        "inventory_level"
+      ]
+    },
+    "agent_capabilities": {
+      "analysis_types": [
+        "Daily Sales Summary",
+        "Sales Rep Performance",
+        "Product Demand Trends",
+        "Churn Risk Identification",
+        "Manufacturing Schedule",
+        "Inventory Monitoring",
+        "Customer LTV Analysis"
+      ],
+      "alert_triggers": [
+        "High churn risk (>25%)",
+        "Low inventory (<safety_stock)",
+        "Manufacturing deadline approaching",
+        "Underperforming rep (<85% quota)"
+      ],
+      "data_freshness": "Updated daily via GitHub Actions"
+    }
+  }
