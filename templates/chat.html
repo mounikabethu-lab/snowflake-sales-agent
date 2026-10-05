@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snowflake Data Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            🤖 Snowflake Data Intelligence
+        </div>
+        
+        <div class="messages" id="messages">
+            <div class="message bot-message">
+                <div class="message-content">Hi! I'm your data assistant. Ask me anything about your Snowflake data.</div>
+                <div class="timestamp">Just now</div>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input 
+                type="text" 
+                id="messageInput" 
+                class="message-input" 
+                placeholder="Ask a question... e.g., 'Top 10 customers by revenue'"
+                autocomplete="off"
+            >
+            <button id="sendBtn" class="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messagesDiv = document.getElementById('messages');
+
+        // Send message on button click
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Send message on Enter key
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat(message, 'user');
+            messageInput.value = '';
+
+            // Disable input while loading
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Loading...';
+
+            // Send to backend
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Format and display results
+                    const resultsHtml = formatResults(data.data);
+                    addMessageToChat(resultsHtml, 'bot', true);
+                } else {
+                    addMessageToChat(`Error: ${data.error}`, 'bot-error');
+                }
+            })
+            .catch(error => {
+                addMessageToChat(`Error: ${error.message}`, 'bot-error');
+            })
+            .finally(() => {
+                // Re-enable input
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+                messageInput.focus();
+            });
+        }
+
+        function addMessageToChat(content, sender, isHtml = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (isHtml) {
+                contentDiv.innerHTML = content;
+            } else {
+                contentDiv.textContent = content;
+            }
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'timestamp';
+            timeDiv.textContent = new Date().toLocaleTimeString();
+
+            messageDiv.appendChild(contentDiv);
+            messageDiv.appendChild(timeDiv);
+            messagesDiv.appendChild(messageDiv);
+
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function formatResults(data) {
+            if (!data || data.length === 0) {
+                return 'No results found.';
+            }
+
+            // Create table
+            let html = '<table class="results-table"><thead><tr>';
+            
+            // Get column names from first row
+            const columns = Object.keys(data[0]);
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            // Add rows
+            data.forEach((row, index) => {
+                html += `<tr class="${index % 2 === 0 ? 'even' : 'odd'}">`;
+                columns.forEach(col => {
+                    let value = row[col];
+                    // Format large numbers
+                    if (typeof value === 'number') {
+                        value = value.toLocaleString();
+                    }
+                    html += `<td>${value}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            return html;
+        }
+    </script>
+</body>
+</html>

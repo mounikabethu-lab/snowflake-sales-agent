@@ -1,1 +1,0 @@
-# Snowflake Sales Agent Package
