@@ -97,7 +97,7 @@ class SalesDataAgent:
     def get_customer_ltv_insights(self):
         """Get customer LTV insights"""
         logger.info("Analyzing customer lifetime value...")
-        query = SalesQueries.customer_lifetime_value_insights()
+        query = SalesQueries.customer_ltv_insights()
         results = self.client.execute_and_log(
             agent_action='CUSTOMER_LTV',
             query=query,
