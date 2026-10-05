@@ -37,13 +37,16 @@ def deploy_test_table():
         
         # Create test table
         print("Creating TEST_DEPLOYMENT table...")
+        # Use schema first
+        cursor.execute("USE SCHEMA PUBLIC")
+
+       # Create table
         create_table_sql = """
-        USE SCHEMA PUBLIC;
         CREATE OR REPLACE TABLE TEST_DEPLOYMENT (
-            test_id INT,
-            test_name VARCHAR,
-            test_timestamp TIMESTAMP_NTZ,
-            status VARCHAR
+        test_id INT,
+        test_name VARCHAR,
+        test_timestamp TIMESTAMP_NTZ,
+        status VARCHAR
         )
         """
         cursor.execute(create_table_sql)
@@ -53,9 +56,7 @@ def deploy_test_table():
         print("Inserting test data...")
         insert_sql = f"""
         INSERT INTO TEST_DEPLOYMENT VALUES
-        (1, 'End-to-End Test', CURRENT_TIMESTAMP(), 'SUCCESS'),
-        (2, 'GitHub Actions Integration', CURRENT_TIMESTAMP(), 'SUCCESS'),
-        (3, 'Snowflake Deployment', CURRENT_TIMESTAMP(), 'SUCCESS')
+        (1, 'End-to-End Test', CURRENT_TIMESTAMP(), 'SUCCESS')
         """
         cursor.execute(insert_sql)
         conn.commit()
