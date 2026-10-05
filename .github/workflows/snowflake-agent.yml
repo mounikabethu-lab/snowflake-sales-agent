@@ -34,7 +34,7 @@ jobs:
           echo "SNOWFLAKE_WAREHOUSE=${{ secrets.SNOWFLAKE_WAREHOUSE }}" >> .env
 
       - name: Run Snowflake Sales Agent
-        run: python src/agent.py
+        run: python -m src.agent
 
       - name: Report Generation Complete
         run: echo "Sales agent report generated at $(date)"
