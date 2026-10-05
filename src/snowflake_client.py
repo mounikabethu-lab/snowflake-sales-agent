@@ -1,28 +1,56 @@
-import snowflake.connector
-from snowflake.connector.errors import DatabaseError, ProgrammingError
-import time
-import logging
-from datetime import datetime
-from src.config import Config
+"""Snowflake connection, query execution, and audit logging."""
 
-logging.basicConfig(level=logging.INFO)
+import logging
+import time
+from typing import Any, List, Optional
+
+import snowflake.connector
+
 logger = logging.getLogger(__name__)
 
+
 class SnowflakeClient:
-    """Snowflake connection and query execution with audit logging"""
-    
-    def __init__(self, account, user, password, database, warehouse):
-        """Initialize Snowflake client"""
+    """Client for Snowflake database operations with query audit logging."""
+
+    def __init__(
+        self,
+        account: str,
+        user: str,
+        password: str,
+        database: str,
+        warehouse: str,
+    ) -> None:
+        """Store Snowflake connection parameters.
+
+        Args:
+            account: Snowflake account identifier.
+            user: Snowflake username.
+            password: Snowflake password.
+            database: Default database name.
+            warehouse: Warehouse to use for queries.
+        """
         self.account = account
         self.user = user
         self.password = password
         self.database = database
         self.warehouse = warehouse
-        self.conn = None
-        self.cursor = None
-        
-    def connect(self):
-        """Establish connection to Snowflake"""
+        self.conn: Optional[Any] = None
+        self.cursor: Optional[Any] = None
+
+    @staticmethod
+    def _sql_escape(value: str) -> str:
+        """Escape single quotes for safe inclusion in SQL string literals."""
+        return value.replace("'", "''")
+
+    def connect(self) -> bool:
+        """Connect to Snowflake and set the PUBLIC schema.
+
+        Returns:
+            True if the connection is established.
+
+        Raises:
+            Exception: If the connection or schema switch fails.
+        """
         try:
             logger.info(f"Connecting to Snowflake account: {self.account}")
             self.conn = snowflake.connector.connect(
@@ -31,97 +59,120 @@ class SnowflakeClient:
                 password=self.password,
                 database=self.database,
                 warehouse=self.warehouse,
-                connect_timeout=30
+                connect_timeout=30,
             )
             self.cursor = self.conn.cursor()
-            logger.info("✓ Connected to Snowflake successfully")
+            self.cursor.execute("USE SCHEMA PUBLIC")
+            logger.info("✓ Connected to Snowflake")
             return True
-        except DatabaseError as e:
-            logger.error(f"✗ Database connection failed: {str(e)}")
-            raise
         except Exception as e:
-            logger.error(f"✗ Connection error: {str(e)}")
+            logger.error(f"✗ Connection failed: {type(e).__name__}: {e}")
             raise
-    
-    def execute_query(self, query: str, return_dict: bool = True):
-        """Execute SELECT query and return results"""
+
+    def execute_query(self, query: str) -> List[Any]:
+        """Execute a SQL query and return all result rows.
+
+        Args:
+            query: SQL statement to execute.
+
+        Returns:
+            List of result rows.
+
+        Raises:
+            Exception: If query execution fails.
+        """
         try:
             start_time = time.time()
             self.cursor.execute(query)
             results = self.cursor.fetchall()
-            execution_time = (time.time() - start_time) * 1000
-            
-            logger.info(f"✓ Query executed in {execution_time:.2f}ms, returned {len(results)} rows")
+            execution_time_ms = (time.time() - start_time) * 1000
+            logger.info(
+                f"✓ Query executed in {execution_time_ms:.2f}ms, "
+                f"returned {len(results)} rows"
+            )
             return results
-        except ProgrammingError as e:
-            logger.error(f"✗ Query error: {str(e)}")
-            raise
         except Exception as e:
-            logger.error(f"✗ Execution error: {str(e)}")
+            logger.error(f"✗ Query execution failed: {e}")
             raise
-    
-    def execute_and_log(self, agent_action: str, query: str, query_type: str = 'SELECT', table_name: str = 'UNKNOWN'):
-        """Execute query and log to AGENT_QUERY_AUDIT table"""
+
+    def execute_and_log(
+        self,
+        agent_action: str,
+        query: str,
+        query_type: str = "SELECT",
+        table_name: str = "UNKNOWN",
+    ) -> List[Any]:
+        """Execute a query and write a row to AGENT_QUERY_AUDIT.
+
+        Args:
+            agent_action: Name of the agent action that triggered the query.
+            query: SQL statement to execute.
+            query_type: SQL statement type (default SELECT).
+            table_name: Table(s) involved in the query.
+
+        Returns:
+            List of result rows from the original query.
+
+        Raises:
+            Exception: If query execution fails (after writing a FAILED audit row).
+        """
+        start_time = time.time()
         try:
-            start_time = time.time()
             self.cursor.execute(query)
             results = self.cursor.fetchall()
-            execution_time = int((time.time() - start_time) * 1000)
+            execution_time_ms = int((time.time() - start_time) * 1000)
             rows_returned = len(results)
-            
-            # Log to audit table
+
             audit_query = f"""
             INSERT INTO AGENT_QUERY_AUDIT (
                 execution_timestamp, agent_action, query_type, table_name,
-                query_text, execution_time_ms, rows_returned, execution_status,
+                execution_time_ms, rows_returned, execution_status,
                 warehouse_used, user_executed
             ) VALUES (
-                CURRENT_TIMESTAMP(), 
-                '{agent_action}', 
-                '{query_type}', 
-                '{table_name}',
-                '{query.replace(chr(39), chr(39) + chr(39))}',
-                {execution_time},
+                CURRENT_TIMESTAMP(),
+                '{self._sql_escape(agent_action)}',
+                '{self._sql_escape(query_type)}',
+                '{self._sql_escape(table_name)}',
+                {execution_time_ms},
                 {rows_returned},
                 'SUCCESS',
-                '{self.warehouse}',
-                '{self.user}'
+                '{self._sql_escape(self.warehouse)}',
+                '{self._sql_escape(self.user)}'
             )
             """
             self.cursor.execute(audit_query)
             self.conn.commit()
-            
-            logger.info(f"✓ {agent_action}: {rows_returned} rows in {execution_time}ms")
+
+            logger.info(f"✓ {agent_action}: {rows_returned} rows in {execution_time_ms}ms")
             return results
         except Exception as e:
-            # Log failure
-            error_msg = str(e).replace(chr(39), chr(39) + chr(39))
+            error_msg = self._sql_escape(str(e))
             error_query = f"""
             INSERT INTO AGENT_QUERY_AUDIT (
                 execution_timestamp, agent_action, query_type, table_name,
                 execution_status, error_message, warehouse_used, user_executed
             ) VALUES (
                 CURRENT_TIMESTAMP(),
-                '{agent_action}',
-                '{query_type}',
-                '{table_name}',
+                '{self._sql_escape(agent_action)}',
+                '{self._sql_escape(query_type)}',
+                '{self._sql_escape(table_name)}',
                 'FAILED',
                 '{error_msg}',
-                '{self.warehouse}',
-                '{self.user}'
+                '{self._sql_escape(self.warehouse)}',
+                '{self._sql_escape(self.user)}'
             )
             """
             try:
                 self.cursor.execute(error_query)
                 self.conn.commit()
-            except:
-                pass
-            
-            logger.error(f"✗ {agent_action} failed: {str(e)}")
+            except Exception as audit_error:
+                logger.error(f"✗ Failed to write audit error row: {audit_error}")
+
+            logger.error(f"✗ {agent_action} failed: {e}")
             raise
-    
-    def close(self):
-        """Close Snowflake connection"""
+
+    def close(self) -> None:
+        """Close the cursor and Snowflake connection if they exist."""
         if self.cursor:
             self.cursor.close()
         if self.conn:
