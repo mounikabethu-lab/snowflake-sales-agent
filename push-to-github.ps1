@@ -1,5 +1,5 @@
 Write-Host "Git Push with Confirmation"
-Write-Host "=========================="
+Write-Host "==========================="
 Write-Host ""
 
 git status
